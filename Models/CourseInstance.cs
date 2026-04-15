@@ -1,8 +1,8 @@
 namespace StudentApi.Models
 {
-    public class CourseInstance(int id, DateTime startDate, DateTime endDate, Course course, List<Student> students  )
+    public class CourseInstance(DateTime startDate, DateTime endDate, Course course, List<Student> students  )
     {
-        public int Id { get; set; } = id;
+        public string Id { get; set; } = Guid.NewGuid().ToString();
         public DateTime StartDate { get; set; } = startDate;
         public DateTime EndDate { get; set; } = endDate;
         public Course Course { get; set; } = course;

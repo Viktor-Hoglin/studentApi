@@ -31,3 +31,4 @@ C:\Users\vjhog\Desktop\Projects\StudentApi\obj\Debug\net10.0\refint\StudentApi.d
 C:\Users\vjhog\Desktop\Projects\StudentApi\obj\Debug\net10.0\StudentApi.pdb
 C:\Users\vjhog\Desktop\Projects\StudentApi\obj\Debug\net10.0\StudentApi.genruntimeconfig.cache
 C:\Users\vjhog\Desktop\Projects\StudentApi\obj\Debug\net10.0\ref\StudentApi.dll
+C:\Users\vjhog\Desktop\Projects\StudentApi\obj\Debug\net10.0\StudentApi.sourcelink.json
