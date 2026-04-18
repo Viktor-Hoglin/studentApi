@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using StudentApi.Models;
 using StudentApi.Models.Requests;
 
@@ -85,8 +86,14 @@ app.MapPost("/students", (NewStudentRequest req) =>
 {
     try {
         Student newStudent = new(req.Name, req.Email);
-        students.Add(newStudent);
 
+        if(req.Name == null || req.Email == null) {
+            return Results.BadRequest("One or both request parameters are missing.");
+        } else if(req.Name.GetType() != typeof(string) || req.Email.GetType() != typeof(string)) {
+            return Results.BadRequest("One or both request parameters are of the wrong type.");
+        }
+
+        students.Add(newStudent);
         return Results.Created("/students", newStudent);
     }
     catch (Exception ex) {   
@@ -101,8 +108,31 @@ app.MapPost("/students", (NewStudentRequest req) =>
 }
  */
 
-// Delete specific student
-app.MapDelete("/students", (string id) =>
+app.MapPut("/students/{id}", (string id, UpdateStudentRequest req) =>
+{
+    try {
+        Student newStudent = new(req.Name, req.Email);
+
+        Student? studentToUpdate = students.FirstOrDefault(s => s.Id == id);
+        if(studentToUpdate == null) {
+            return Results.NotFound($"Found no user with the id: {id}");
+        }
+        if(req.Name == null || req.Email == null) {
+            return Results.BadRequest("Could not update student info as one or both request parameters are missing.");
+        }
+        
+        studentToUpdate.Name = req.Name;
+        studentToUpdate.Email = req.Email;
+
+        return Results.Ok(studentToUpdate);
+    }
+    catch (Exception ex) {   
+        return Results.InternalServerError(ex);
+    }
+    
+});
+
+app.MapDelete("/students/{id}", (string id) =>
 {
     try {
         Student? studentToDelete = students.FirstOrDefault(s => s.Id == id);
