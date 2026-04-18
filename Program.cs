@@ -51,6 +51,8 @@ List<Grade> grades = [
     new("C", courseInstances[2], students[1]),
 ];
 
+// Student Endpoints
+
 app.MapGet("/students", () =>
 {
     try {
@@ -65,11 +67,10 @@ app.MapGet("/students", () =>
 // Get specific student
 app.MapGet("/students/{id}", (string id) =>
 {
-
     try {
         Student? foundStudent = students.FirstOrDefault(s => s.Id == id);
         if(foundStudent == null) {
-            return Results.NotFound($"Found no user with the id: {id}");
+            return Results.NotFound($"Found no student with the id: {id}");
         }
         return Results.Ok(foundStudent); 
     }
@@ -77,7 +78,6 @@ app.MapGet("/students/{id}", (string id) =>
     {
         return Results.InternalServerError(ex);
     }
-    
 });
 
 
@@ -99,8 +99,8 @@ app.MapPost("/students", (NewStudentRequest req) =>
     catch (Exception ex) {   
         return Results.InternalServerError(ex);
     }
-    
 });
+
 /* 
 {
     "name": "Bob Larry",
@@ -108,14 +108,14 @@ app.MapPost("/students", (NewStudentRequest req) =>
 }
  */
 
-app.MapPut("/students/{id}", (string id, UpdateStudentRequest req) =>
+app.MapPut("/students/{id}", (string id, NewStudentRequest req) =>
 {
     try {
         Student newStudent = new(req.Name, req.Email);
 
         Student? studentToUpdate = students.FirstOrDefault(s => s.Id == id);
         if(studentToUpdate == null) {
-            return Results.NotFound($"Found no user with the id: {id}");
+            return Results.NotFound($"Found no student with the id: {id}");
         }
         if(req.Name == null || req.Email == null) {
             return Results.BadRequest("Could not update student info as one or both request parameters are missing.");
@@ -129,7 +129,6 @@ app.MapPut("/students/{id}", (string id, UpdateStudentRequest req) =>
     catch (Exception ex) {   
         return Results.InternalServerError(ex);
     }
-    
 });
 
 app.MapDelete("/students/{id}", (string id) =>
@@ -137,7 +136,7 @@ app.MapDelete("/students/{id}", (string id) =>
     try {
         Student? studentToDelete = students.FirstOrDefault(s => s.Id == id);
         if(studentToDelete == null) {
-            return Results.NotFound($"Found no user to delete with the id: {id}");
+            return Results.NotFound($"Found no student to delete with the id: {id}");
         }
         students.Remove(studentToDelete);
 
@@ -146,22 +145,96 @@ app.MapDelete("/students/{id}", (string id) =>
     catch (Exception ex) {   
         return Results.InternalServerError(ex);
     }
-    
 });
 
+// Courses Endpoints
 
 app.MapGet("/courses", () =>
 {
-    return courses;
+    try {
+        return Results.Ok(courses); 
+    }
+    catch (Exception ex) {   
+        return Results.InternalServerError(ex);
+    }
 });
 
 
 // Get specific course
 app.MapGet("/courses/{id}", (string id) =>
 {
-    var course = courses.Find(c => c.Id == id);
-    return course;
+    try {
+        Course? foundCourse = courses.FirstOrDefault(c => c.Id == id);
+        if(foundCourse == null) {
+            return Results.NotFound($"Found no course with the id: {id}");
+        }
+        return Results.Ok(foundCourse); 
+    }
+    catch (Exception ex)
+    {
+        return Results.InternalServerError(ex);
+    }
 });
+
+app.MapPost("/courses", (NewCourseRequest req) =>
+{
+    try {
+        Course newCourse = new(req.Title, req.Description);
+
+        if(req.Title == null || req.Description == null) {
+            return Results.BadRequest("One or both request parameters are missing.");
+        } else if(req.Title.GetType() != typeof(string) || req.Description.GetType() != typeof(string)) {
+            return Results.BadRequest("One or both request parameters are of the wrong type.");
+        }
+
+        courses.Add(newCourse);
+        return Results.Created("/courses", newCourse);
+    }
+    catch (Exception ex) {   
+        return Results.InternalServerError(ex);
+    }
+});
+
+app.MapPut("/courses/{id}", (string id, NewCourseRequest req) =>
+{
+    try {
+        Course newCourse = new(req.Title, req.Description);
+
+        Course? courseToUpdate = courses.FirstOrDefault(c => c.Id == id);
+        if(courseToUpdate == null) {
+            return Results.NotFound($"Found no course with the id: {id}");
+        }
+        if(req.Title == null || req.Description == null) {
+            return Results.BadRequest("Could not update course info as one or both request parameters are missing.");
+        }
+        
+        courseToUpdate.Title = req.Title;
+        courseToUpdate.Description = req.Description;
+
+        return Results.Ok(courseToUpdate);
+    }
+    catch (Exception ex) {   
+        return Results.InternalServerError(ex);
+    }
+});
+
+app.MapDelete("/courses/{id}", (string id) =>
+{
+    try {
+        Course? courseToDelete = courses.FirstOrDefault(c => c.Id == id);
+        if(courseToDelete == null) {
+            return Results.NotFound($"Found no course to delete with the id: {id}");
+        }
+        courses.Remove(courseToDelete);
+
+        return Results.NoContent();
+    }
+    catch (Exception ex) {   
+        return Results.InternalServerError(ex);
+    }
+});
+
+// CourseInstances Endpoints
 
 app.MapGet("/courseInstances", () =>
 {
