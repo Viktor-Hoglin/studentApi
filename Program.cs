@@ -85,14 +85,14 @@ app.MapGet("/students/{id}", (string id) =>
 app.MapPost("/students", (NewStudentRequest req) =>
 {
     try {
-        Student newStudent = new(req.Name, req.Email);
-
         if(req.Name == null || req.Email == null) {
             return Results.BadRequest("One or both request parameters are missing.");
-        } else if(req.Name.GetType() != typeof(string) || req.Email.GetType() != typeof(string)) {
+        } 
+        if(req.Name.GetType() != typeof(string) || req.Email.GetType() != typeof(string)) {
             return Results.BadRequest("One or both request parameters are of the wrong type.");
         }
 
+        Student newStudent = new(req.Name, req.Email);
         students.Add(newStudent);
         return Results.Created("/students", newStudent);
     }
@@ -111,8 +111,6 @@ app.MapPost("/students", (NewStudentRequest req) =>
 app.MapPut("/students/{id}", (string id, NewStudentRequest req) =>
 {
     try {
-        Student newStudent = new(req.Name, req.Email);
-
         Student? studentToUpdate = students.FirstOrDefault(s => s.Id == id);
         if(studentToUpdate == null) {
             return Results.NotFound($"Found no student with the id: {id}");
@@ -160,7 +158,6 @@ app.MapGet("/courses", () =>
 });
 
 
-// Get specific course
 app.MapGet("/courses/{id}", (string id) =>
 {
     try {
@@ -179,14 +176,14 @@ app.MapGet("/courses/{id}", (string id) =>
 app.MapPost("/courses", (NewCourseRequest req) =>
 {
     try {
-        Course newCourse = new(req.Title, req.Description);
-
         if(req.Title == null || req.Description == null) {
             return Results.BadRequest("One or both request parameters are missing.");
-        } else if(req.Title.GetType() != typeof(string) || req.Description.GetType() != typeof(string)) {
+        } 
+        if(req.Title.GetType() != typeof(string) || req.Description.GetType() != typeof(string)) {
             return Results.BadRequest("One or both request parameters are of the wrong type.");
         }
 
+        Course newCourse = new(req.Title, req.Description);
         courses.Add(newCourse);
         return Results.Created("/courses", newCourse);
     }
@@ -198,8 +195,6 @@ app.MapPost("/courses", (NewCourseRequest req) =>
 app.MapPut("/courses/{id}", (string id, NewCourseRequest req) =>
 {
     try {
-        Course newCourse = new(req.Title, req.Description);
-
         Course? courseToUpdate = courses.FirstOrDefault(c => c.Id == id);
         if(courseToUpdate == null) {
             return Results.NotFound($"Found no course with the id: {id}");
@@ -238,10 +233,129 @@ app.MapDelete("/courses/{id}", (string id) =>
 
 app.MapGet("/courseInstances", () =>
 {
-    return courseInstances;
+    try {
+        return Results.Ok(courseInstances); 
+    }
+    catch (Exception ex) {   
+        return Results.InternalServerError(ex);
+    }
+});
+
+// Get courseInstances by its id
+app.MapGet("/courseInstances/{id}", (string id) =>
+{
+    try {
+        CourseInstance? foundCourseInstance = courseInstances.FirstOrDefault(ci => ci.Id == id);
+        if(foundCourseInstance == null) {
+            return Results.NotFound($"Found no courseInstance with the id: {id}");
+        }
+        return Results.Ok(foundCourseInstance); 
+    }
+    catch (Exception ex)
+    {
+        return Results.InternalServerError(ex);
+    }
+});
+
+app.MapPost("/courseInstances", (NewCourseInstance req) =>
+{
+    try {
+        if(req.CourseId == null || req.StudentIds == null || req.StartDate.GetType() != typeof(DateTime) || req.EndDate.GetType() != typeof(DateTime)) {
+            return Results.BadRequest("One or more request parameters are missing or are invalid.");
+        }
+
+        Course? reqCourse = courses.FirstOrDefault(c => c.Id == req.CourseId);
+        if (reqCourse == null){
+            return Results.BadRequest($"Could not find course with the id of: {req.CourseId}");
+        }
+
+        List<Student>? reqStudents = [];
+        
+        foreach (string reqStudentId in req.StudentIds) {
+            Student? requestedStudent = students.FirstOrDefault(s => s.Id == reqStudentId);
+            if(requestedStudent != null) {
+                reqStudents.Add(requestedStudent);
+            } else {
+                return Results.BadRequest($"Could not find student with the id of: {reqStudentId}");
+            }
+        }
+
+        if(req.StartDate > req.EndDate) {
+            return Results.BadRequest("StartDate needs to be before endDate.");
+        }
+        
+        CourseInstance newCourseInstance = new(req.StartDate, req.EndDate, reqCourse, reqStudents);
+
+        courseInstances.Add(newCourseInstance); 
+        return Results.Created("/courseInstances", newCourseInstance);
+    }
+    catch (Exception ex) {   
+        return Results.InternalServerError(ex);
+    }
+});
+
+app.MapPut("/courseInstances/{id}", (string id, NewCourseInstance req) =>
+{
+    try {
+        CourseInstance? courseInstanceToUpdate = courseInstances.FirstOrDefault(ci => ci.Id == id);
+        if(courseInstanceToUpdate == null) {
+            return Results.NotFound($"Found no courseInstance with the id: {id}");
+        }
+
+        if(req.CourseId == null || req.StudentIds == null || req.StartDate.GetType() != typeof(DateTime) || req.EndDate.GetType() != typeof(DateTime)) {
+            return Results.BadRequest("Could not update instance as one or more request parameters are missing or are invalid.");
+        }
+
+        Course? reqCourse = courses.FirstOrDefault(c => c.Id == req.CourseId);
+        if (reqCourse == null){
+            return Results.BadRequest($"Could not find course with the id of: {req.CourseId}");
+        }
+
+        List<Student>? reqStudents = [];
+        
+        foreach (string reqStudentId in req.StudentIds) {
+            Student? requestedStudent = students.FirstOrDefault(s => s.Id == reqStudentId);
+            if(requestedStudent != null) {
+                reqStudents.Add(requestedStudent);
+            } else {
+                return Results.BadRequest($"Could not find student with the id of: {reqStudentId}");
+            }
+        }
+
+        if(req.StartDate > req.EndDate) {
+            return Results.BadRequest("Could not update courceInstance as startDate needs to be before endDate.");
+        }
+        
+        courseInstanceToUpdate.StartDate = req.StartDate;
+        courseInstanceToUpdate.EndDate = req.EndDate;
+        courseInstanceToUpdate.Course = reqCourse;
+        courseInstanceToUpdate.Students = reqStudents;
+
+        return Results.Ok(courseInstanceToUpdate);
+    }
+    catch (Exception ex) {   
+        return Results.InternalServerError(ex);
+    }
+});
+
+app.MapDelete("/courseInstances/{id}", (string id) =>
+{
+    try {
+        CourseInstance? courseInstanceToDelete = courseInstances.FirstOrDefault(c => c.Id == id);
+        if(courseInstanceToDelete == null) {
+            return Results.NotFound($"Found no courseInstance to delete with the id: {id}");
+        }
+        courseInstances.Remove(courseInstanceToDelete);
+
+        return Results.NoContent();
+    }
+    catch (Exception ex) {   
+        return Results.InternalServerError(ex);
+    }
 });
 
 // Get courseInstances for a specific student
+// TODO: Add correct status codes with try/catch 
 app.MapGet("/courseInstances/studentId={studentId}", (string studentId) =>
 {
     List<Course> studentCourses = [];
@@ -255,6 +369,7 @@ app.MapGet("/courseInstances/studentId={studentId}", (string studentId) =>
     return studentCourses;
 });
 
+// TODO: Add correct status codes with try/catch
 // url structure = "/between?start=2026-08-01T00:00:00&end=2027-04-26T00:00:00"
 app.MapGet("/courseInstances/between", (DateTime start, DateTime end) =>
 {
