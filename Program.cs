@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Http.HttpResults;
-using StudentApi.Models;
-using StudentApi.Models.Requests;
+using StudentApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+builder.Services.AddScoped<IStudentsService, StudentsService>(); // Dependency Injection of IStudentsService
 
 var app = builder.Build();
 
@@ -18,18 +18,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/student", () =>
-{
-    Student s = new("Jacob Hope", "jhope@gmail.com");
-    return s;
-});
+app.MapControllers();
 
-List<Student> students = [
-    new("Jacob Hope", "jhope@gmail.com"),
-    new("Amy Falls", "afalls@gmail.com"),
-    new("Luke Pry", "lpry@gmail.com"),
-];
 
+/*  
 List<Course> courses = [
     new("History 101", "Introduction to world history."),
     new("Chemistry 101", "Introduction to chemistry."),
@@ -50,100 +42,6 @@ List<Grade> grades = [
     new("A-", courseInstances[2], students[0]),
     new("C", courseInstances[2], students[1]),
 ];
-
-// Student Endpoints
-
-app.MapGet("/students", () =>
-{
-    try {
-        return Results.Ok(students); 
-    }
-    catch (Exception ex) {   
-        return Results.InternalServerError(ex);
-    }
-    
-});
-
-// Get specific student
-app.MapGet("/students/{id}", (string id) =>
-{
-    try {
-        Student? foundStudent = students.FirstOrDefault(s => s.Id == id);
-        if(foundStudent == null) {
-            return Results.NotFound($"Found no student with the id: {id}");
-        }
-        return Results.Ok(foundStudent); 
-    }
-    catch (Exception ex)
-    {
-        return Results.InternalServerError(ex);
-    }
-});
-
-
-// Add new student
-app.MapPost("/students", (NewStudentRequest req) =>
-{
-    try {
-        if(req.Name == null || req.Email == null) {
-            return Results.BadRequest("One or both request parameters are missing.");
-        } 
-        if(req.Name.GetType() != typeof(string) || req.Email.GetType() != typeof(string)) {
-            return Results.BadRequest("One or both request parameters are of the wrong type.");
-        }
-
-        Student newStudent = new(req.Name, req.Email);
-        students.Add(newStudent);
-        return Results.Created("/students", newStudent);
-    }
-    catch (Exception ex) {   
-        return Results.InternalServerError(ex);
-    }
-});
-
-/* 
-{
-    "name": "Bob Larry",
-    "email": "blarry@gmail.com"
-}
- */
-
-app.MapPut("/students/{id}", (string id, NewStudentRequest req) =>
-{
-    try {
-        Student? studentToUpdate = students.FirstOrDefault(s => s.Id == id);
-        if(studentToUpdate == null) {
-            return Results.NotFound($"Found no student with the id: {id}");
-        }
-        if(req.Name == null || req.Email == null) {
-            return Results.BadRequest("Could not update student info as one or both request parameters are missing.");
-        }
-        
-        studentToUpdate.Name = req.Name;
-        studentToUpdate.Email = req.Email;
-
-        return Results.Ok(studentToUpdate);
-    }
-    catch (Exception ex) {   
-        return Results.InternalServerError(ex);
-    }
-});
-
-app.MapDelete("/students/{id}", (string id) =>
-{
-    try {
-        Student? studentToDelete = students.FirstOrDefault(s => s.Id == id);
-        if(studentToDelete == null) {
-            return Results.NotFound($"Found no student to delete with the id: {id}");
-        }
-        students.Remove(studentToDelete);
-
-        return Results.NoContent();
-    }
-    catch (Exception ex) {   
-        return Results.InternalServerError(ex);
-    }
-});
 
 // Courses Endpoints
 
@@ -409,7 +307,6 @@ app.MapGet("/grades/studentId={studentId}", (string studentId) =>
     return formattedGradeList;
 });
 
+*/
 
 app.Run();
-
-    
