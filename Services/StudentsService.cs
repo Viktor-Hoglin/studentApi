@@ -1,5 +1,6 @@
 using StudentApi.Models;
 using StudentApi.Models.Requests;
+using StudentApi.Repositories;
 
 namespace StudentApi.Services;
 
@@ -12,54 +13,41 @@ public interface IStudentsService
 	public Student? UpdateStudent(string id, NewStudentRequest req);
 }
 
-public class StudentsService : IStudentsService
+public class StudentsService(IStudentRepository repo) : IStudentsService
 {
-  	public List<Student> students = [
-		new("Jacob Hope", "jhope@gmail.com"),
-		new("Amy Falls", "afalls@gmail.com"),
-		new("Luke Pry", "lpry@gmail.com"),
-    ];
+    private IStudentRepository repository = repo;
 
 	public List<Student> GetStudents()
 	{
-		return students;
+		return repository.GetStudents();
 	} 
 
 	public Student? GetStudentById(string id)
 	{
-		return students.FirstOrDefault(s => s.Id == id);
+		return repository.GetStudentById(id);
 	} 
 
 	public Student CreateStudent(NewStudentRequest req)
 	{
 		Student newStudent = new(req.Name, req.Email);
-        students.Add(newStudent);
+
+        bool success = repository.CreateStudent(newStudent);
+
+        if (success)
+        {
+            return newStudent;
+        }
         
-		return newStudent;
+        throw new Exception("Could not add student to the database");
 	} 
 
 	public Student? UpdateStudent(string id, NewStudentRequest req)
 	{
-		Student? studentToUpdate = students.FirstOrDefault(s => s.Id == id);
-		if(studentToUpdate == null || req.Name == null || req.Email == null)
-		{
-			return studentToUpdate;
-		} 
-
-		studentToUpdate.Name = req.Name;
-        studentToUpdate.Email = req.Email;
-		
-		return studentToUpdate;
+		return repository.UpdateStudent(id, req);
 	}
 
 	public Student? DeleteStudent(string id)
 	{
-		Student? studentToDelete = students.FirstOrDefault(s => s.Id == id);
-		if(studentToDelete != null)
-		{
-			students.Remove(studentToDelete);
-		} 
-		
-		return studentToDelete;	
+		return repository.DeleteStudent(id);
 	}
 }

@@ -60,9 +60,9 @@ public class StudentsController(IStudentsService service) : ControllerBase
 
             return Created("/students", service.CreateStudent(req));
         }
-        catch (Exception ex) 
+        catch 
         {   
-            return BadRequest(ex);
+            throw;
         }
     }
 

@@ -1,3 +1,4 @@
+using StudentApi.Repositories;
 using StudentApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
-builder.Services.AddScoped<IStudentsService, StudentsService>(); // Dependency Injection of IStudentsService
+builder.Services.AddSingleton<IStudentsService, StudentsService>(); // Dependency Injection of IStudentsService
+builder.Services.AddSingleton<IStudentRepository, StudentRepository>(); // Dependency Injection of IStudentRepository
+builder.Services.AddSingleton<ICoursesService, CoursesService>(); // Dependency Injection of ICoursesService
+builder.Services.AddSingleton<ICourseRepository, CourseRepository>(); // Dependency Injection of ICourseRepository
 
 var app = builder.Build();
 
@@ -20,13 +24,7 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 
-
-/*  
-List<Course> courses = [
-    new("History 101", "Introduction to world history."),
-    new("Chemistry 101", "Introduction to chemistry."),
-    new("English 101", "Introduction to english literature and language."),
-];
+/*
 
 List<CourseInstance> courseInstances = [
     new(new DateTime(2026, 09, 01), new DateTime(2027, 05, 01), courses[0], [students[0], students[2]]),
@@ -42,90 +40,6 @@ List<Grade> grades = [
     new("A-", courseInstances[2], students[0]),
     new("C", courseInstances[2], students[1]),
 ];
-
-// Courses Endpoints
-
-app.MapGet("/courses", () =>
-{
-    try {
-        return Results.Ok(courses); 
-    }
-    catch (Exception ex) {   
-        return Results.InternalServerError(ex);
-    }
-});
-
-
-app.MapGet("/courses/{id}", (string id) =>
-{
-    try {
-        Course? foundCourse = courses.FirstOrDefault(c => c.Id == id);
-        if(foundCourse == null) {
-            return Results.NotFound($"Found no course with the id: {id}");
-        }
-        return Results.Ok(foundCourse); 
-    }
-    catch (Exception ex)
-    {
-        return Results.InternalServerError(ex);
-    }
-});
-
-app.MapPost("/courses", (NewCourseRequest req) =>
-{
-    try {
-        if(req.Title == null || req.Description == null) {
-            return Results.BadRequest("One or both request parameters are missing.");
-        } 
-        if(req.Title.GetType() != typeof(string) || req.Description.GetType() != typeof(string)) {
-            return Results.BadRequest("One or both request parameters are of the wrong type.");
-        }
-
-        Course newCourse = new(req.Title, req.Description);
-        courses.Add(newCourse);
-        return Results.Created("/courses", newCourse);
-    }
-    catch (Exception ex) {   
-        return Results.InternalServerError(ex);
-    }
-});
-
-app.MapPut("/courses/{id}", (string id, NewCourseRequest req) =>
-{
-    try {
-        Course? courseToUpdate = courses.FirstOrDefault(c => c.Id == id);
-        if(courseToUpdate == null) {
-            return Results.NotFound($"Found no course with the id: {id}");
-        }
-        if(req.Title == null || req.Description == null) {
-            return Results.BadRequest("Could not update course info as one or both request parameters are missing.");
-        }
-        
-        courseToUpdate.Title = req.Title;
-        courseToUpdate.Description = req.Description;
-
-        return Results.Ok(courseToUpdate);
-    }
-    catch (Exception ex) {   
-        return Results.InternalServerError(ex);
-    }
-});
-
-app.MapDelete("/courses/{id}", (string id) =>
-{
-    try {
-        Course? courseToDelete = courses.FirstOrDefault(c => c.Id == id);
-        if(courseToDelete == null) {
-            return Results.NotFound($"Found no course to delete with the id: {id}");
-        }
-        courses.Remove(courseToDelete);
-
-        return Results.NoContent();
-    }
-    catch (Exception ex) {   
-        return Results.InternalServerError(ex);
-    }
-});
 
 // CourseInstances Endpoints
 
