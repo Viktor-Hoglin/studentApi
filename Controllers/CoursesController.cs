@@ -7,17 +7,16 @@ namespace StudentApi.Controllers;
 
 [ApiController]
 [Route("[controller]")] // Using the name of the class as the route (minus the "Controller")
-public class CoursesController(ICoursesService service) : ControllerBase 
+public class CoursesController(ICourseService service) : ControllerBase 
 {
-
-    private readonly ICoursesService service = service;
+    private readonly ICourseService service = service;
 
     [HttpGet]
     public ActionResult<List<Course>> GetCourses()
     {
         try 
         {
-            return Ok(service.GetCourses()); 
+            return Ok(service.GetAll()); 
         }
         catch (Exception ex) 
         {   
@@ -31,7 +30,7 @@ public class CoursesController(ICoursesService service) : ControllerBase
     {
         try 
         {
-            Course? foundCourse = service.GetCourseById(id);
+            Course? foundCourse = service.GetById(id);
             if(foundCourse == null) 
             {
                 return NotFound($"Found no course with the id: {id}");
@@ -46,7 +45,7 @@ public class CoursesController(ICoursesService service) : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<Course?> CreateCourse([FromBody] NewCourseRequest req)
+    public ActionResult<Course?> AddCourse([FromBody] NewCourseRequest req)
     {
         try 
         {
@@ -59,7 +58,7 @@ public class CoursesController(ICoursesService service) : ControllerBase
                 return BadRequest("One or both request parameters are of the wrong type.");
             }
 
-            return Created("/courses", service.CreateCourse(req));
+            return Created("/courses", service.Add(req));
         }
         catch 
         {   
@@ -73,15 +72,16 @@ public class CoursesController(ICoursesService service) : ControllerBase
     {
         try 
         {
-            Course? courseToUpdate = service.UpdateCourse(id, req);
+            if(req.Title == null || req.Description == null) 
+            {
+                return BadRequest("Could not update course info as one or both request parameters are missing.");
+            }
+
+            Course? courseToUpdate = service.Update(id, req);
             
             if(courseToUpdate == null) 
             {
                 return NotFound($"Found no course with the id: {id}");
-            }
-            if(req.Title == null || req.Description == null) 
-            {
-                return BadRequest("Could not update course info as one or both request parameters are missing.");
             }
 
             return Ok(courseToUpdate);
@@ -98,7 +98,7 @@ public class CoursesController(ICoursesService service) : ControllerBase
     {
         try 
         {
-            if(service.DeleteCourse(id) == null) 
+            if(service.Delete(id) == null) 
             {
                 return NotFound($"Found no course to delete with the id: {id}");
             }

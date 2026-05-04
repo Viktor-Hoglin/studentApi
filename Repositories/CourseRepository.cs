@@ -7,12 +7,12 @@ public interface ICourseRepository
 {
 	public List<Course> GetCourses();
 	public Course? GetCourseById(string id);
-	public bool CreateCourse(Course courseToAdd);
-	public Course? DeleteCourse(string id);
-	public Course? UpdateCourse(string id, NewCourseRequest req);
+	public bool AddCourse(Course courseToAdd);
+	public bool UpdateCourse(Course courseToUpdate, NewCourseRequest req);
+	public bool DeleteCourse(Course courseToDelete);
 }
 
-public class CourseRepository : ICourseRepository
+public class InMemoryCourseRepository : ICourseRepository
 {
 	private List<Course> courses = [
 		new("History 101", "Introduction to world history."),
@@ -29,7 +29,7 @@ public class CourseRepository : ICourseRepository
 		return courses.FirstOrDefault(s => s.Id == id);
 	}
 
-	public bool CreateCourse(Course courseToAdd)
+	public bool AddCourse(Course courseToAdd)
 	{
 		try
 		{
@@ -44,28 +44,32 @@ public class CourseRepository : ICourseRepository
 
 	}
 
-	public Course? UpdateCourse(string id, NewCourseRequest req)
+	public bool UpdateCourse(Course courseToUpdate, NewCourseRequest req)
 	{
-		Course? courseToUpdate = GetCourseById(id);
-		if(courseToUpdate == null || req.Title == null || req.Description == null)
+		try
 		{
-			return courseToUpdate;
-		} 
+			courseToUpdate.Title = req.Title;
+			courseToUpdate.Description = req.Description;
 
-		courseToUpdate.Title = req.Title;
-        courseToUpdate.Description = req.Description;
-
-		return courseToUpdate;
+			return true;
+		}
+		catch
+		{
+			throw;
+		}
 	}
 
-	public Course? DeleteCourse(string id)
+	public bool DeleteCourse(Course courseToDelete)
 	{
-		Course? courseToDelete = GetCourseById(id);
-		if(courseToDelete != null)
+		try
 		{
 			courses.Remove(courseToDelete);
-		} 
 
-		return courseToDelete;
+			return true;
+		}
+		catch
+		{
+			throw;
+		}
 	}
 }

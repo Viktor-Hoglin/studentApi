@@ -7,16 +7,15 @@ namespace StudentApi.Controllers;
 
 [ApiController]
 [Route("[controller]")] // Using the name of the class as the route (minus the "Controller")
-public class StudentsController(IStudentsService service) : ControllerBase 
+public class StudentsController(IStudentService service) : ControllerBase 
 {
-
-    private readonly IStudentsService service = service;
+    private readonly IStudentService service = service;
 
     [HttpGet]
     public ActionResult<List<Student>> GetStudents() 
     {
         try {
-            return Ok(service.GetStudents()); 
+            return Ok(service.GetAll()); 
         }
         catch (Exception ex) 
         {   
@@ -30,7 +29,7 @@ public class StudentsController(IStudentsService service) : ControllerBase
     {   
         try 
         {
-            Student? foundStudent = service.GetStudentById(id);
+            Student? foundStudent = service.GetById(id);
             if(foundStudent == null) 
             {
                 return NotFound($"Found no student with the id: {id}");
@@ -45,7 +44,7 @@ public class StudentsController(IStudentsService service) : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<Student?> CreateStudent([FromBody] NewStudentRequest req)
+    public ActionResult<Student?> AddStudent([FromBody] NewStudentRequest req)
     {
         try 
         {
@@ -58,7 +57,7 @@ public class StudentsController(IStudentsService service) : ControllerBase
                 return BadRequest("One or both request parameters are of the wrong type.");
             }
 
-            return Created("/students", service.CreateStudent(req));
+            return Created("/students", service.Add(req));
         }
         catch 
         {   
@@ -79,15 +78,16 @@ public class StudentsController(IStudentsService service) : ControllerBase
     {
         try 
         {
-            Student? studentToUpdate = service.UpdateStudent(id, req);
+            if(req.Name == null || req.Email == null) 
+            {
+                return BadRequest("Could not update student info as one or both request parameters are missing.");
+            }
+
+            Student? studentToUpdate = service.Update(id, req);
             
             if(studentToUpdate == null) 
             {
                 return NotFound($"Found no student with the id: {id}");
-            }
-            if(req.Name == null || req.Email == null) 
-            {
-                return BadRequest("Could not update student info as one or both request parameters are missing.");
             }
 
             return Ok(studentToUpdate);
@@ -104,7 +104,7 @@ public class StudentsController(IStudentsService service) : ControllerBase
     {
         try 
         {
-            if(service.DeleteStudent(id) == null) 
+            if(service.Delete(id) == null) 
             {
                 return NotFound($"Found no student to delete with the id: {id}");
             }

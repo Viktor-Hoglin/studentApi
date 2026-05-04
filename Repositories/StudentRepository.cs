@@ -6,12 +6,12 @@ public interface IStudentRepository
 {
   	public List<Student> GetStudents();
 	public Student? GetStudentById(string id);
-	public bool CreateStudent(Student studentToAdd);
-	public Student? DeleteStudent(string id);
-	public Student? UpdateStudent(string id, NewStudentRequest req);
+	public bool AddStudent(Student studentToAdd);
+	public bool UpdateStudent(Student studentToUpdate, NewStudentRequest req);
+	public bool DeleteStudent(Student studentToDelete);
 }
 
-public class StudentRepository : IStudentRepository
+public class InMemoryStudentRepository : IStudentRepository
 {
 	private List<Student> students = [
 		new("Jacob Hope", "jhope@gmail.com"),
@@ -28,7 +28,7 @@ public class StudentRepository : IStudentRepository
 		return students.FirstOrDefault(s => s.Id == id);
 	}
 
-	public bool CreateStudent(Student studentToAdd)
+	public bool AddStudent(Student studentToAdd)
 	{
 		try
 		{
@@ -43,28 +43,32 @@ public class StudentRepository : IStudentRepository
 
 	}
 
-	public Student? UpdateStudent(string id, NewStudentRequest req)
+	public bool UpdateStudent(Student studentToUpdate, NewStudentRequest req)
 	{
-		Student? studentToUpdate = GetStudentById(id);
-		if(studentToUpdate == null || req.Name == null || req.Email == null)
+		try
 		{
-			return studentToUpdate;
-		} 
-
-		studentToUpdate.Name = req.Name;
-        studentToUpdate.Email = req.Email;
-
-		return studentToUpdate;
+			studentToUpdate.Name = req.Name;
+        	studentToUpdate.Email = req.Email;
+			
+			return true;
+		}
+		catch
+		{
+			throw;
+		}
 	}
 
-	public Student? DeleteStudent(string id)
+	public bool DeleteStudent(Student studentToDelete)
 	{
-		Student? studentToDelete = GetStudentById(id);
-		if(studentToDelete != null)
+		try
 		{
 			students.Remove(studentToDelete);
-		} 
 
-		return studentToDelete;
+			return true;
+		}
+		catch
+		{
+			throw;
+		}
 	}
 }
